@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica Almacenamiento Web</title>
+    <!-- Bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>
+    /* ===== Estilos personalizados mínimos ===== */
+    /* Bootstrap ya proporciona la mayoría de los estilos, aquí solo personalizaciones específicas */
+    /* Transición suave cuando se cambia el color de fondo en Ejercicio 1 */
+    body {
+        transition: background-color 0.3s ease;
+    }
+
+    /* Efecto hover en tarjetas */
+    .card {
+        transition: box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Estilos para items de tareas */
+    .task-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Estilos para el pie de página de cards (explicaciones) */
+    .card-footer small {
+        line-height: 1.6;
+        display: block;
+    }
+</style>
+<body id="mainBody">
+    <div class="container-lg py-5">
+        <header class="bg-dark text-white p-4 rounded mb-5 text-center">
+            <h1 class="mb-2">Práctica de Almacenamiento Web</h1>
+            <p class="mb-0">localStorage, sessionStorage y sincronización entre pestañas</p>
+        </header>
+
+        <div class="row g-4">
+            <!-- EJERCICIO 1: Preferencias de usuario -->
+            <div class="col-lg-6 col-md-12">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Ejercicio 1: Preferencias de Usuario</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="ex1-name" class="form-label">Nombre:</label>
+                            <input type="text" class="form-control" id="ex1-name" placeholder="Ingresa tu nombre">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ex1-color" class="form-label">Color de fondo:</label>
+                            <select class="form-select" id="ex1-color">
+                                <option value="#ffffff">Blanco</option>
+                                <option value="#f0f0f0">Gris claro</option>
+                                <option value="#e3f2fd">Azul claro</option>
+                                <option value="#f3e5f5">Púrpura claro</option>
+                                <option value="#e8f5e9">Verde claro</option>
+                                <option value="#fff3e0">Naranja claro</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex mb-3">
+                            <button class="btn btn-success" onclick="ex1Save()">Guardar Preferencias</button>
+                            <button class="btn btn-danger" onclick="ex1Reset()">Restablecer</button>
+                        </div>
+
+                        <div id="ex1-bg" class="alert alert-info mb-0">
+                            Preferencias cargadas
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EJERCICIO 2: Contador de visitas -->
+            <div class="col-lg-6 col-md-12">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Ejercicio 2: Contador de Visitas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-3">
+                            <strong>Número de visitas:</strong>
+                            <h3 class="text-primary mt-2" id="ex2-visits">0</h3>
+                        </div>
+
+                        <button class="btn btn-danger w-100" onclick="ex2Reset()">Reiniciar Contador</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EJERCICIO 3: sessionStorage -->
+            <div class="col-lg-6 col-md-12">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Ejercicio 3: Almacenamiento Temporal</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="ex3-name" class="form-label">Nombre:</label>
+                            <input type="text" class="form-control" id="ex3-name" placeholder="Tu nombre">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ex3-course" class="form-label">Curso:</label>
+                            <input type="text" class="form-control" id="ex3-course" placeholder="Tu curso">
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex mb-3">
+                            <button class="btn btn-success" onclick="ex3Save()">Guardar (sessionStorage)</button>
+                            <button class="btn btn-danger" onclick="ex3Clear()">Limpiar</button>
+                        </div>
+
+                        <div class="alert alert-info mb-0" id="ex3-output">
+                            Los datos aparecerán aquí
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <small class="text-muted">Los datos se guardan en sessionStorage, que desaparece cuando cierras esta pestaña o el navegador. Al recargar la página dentro de la misma sesión, los datos se mantienen visible porque sessionStorage persiste solo durante la sesión activa.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EJERCICIO 4: Comparativa -->
+            <div class="col-lg-6 col-md-12">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Ejercicio 4: Comparativa localStorage vs sessionStorage</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="ex4-data" class="form-label">Ingresa un dato:</label>
+                            <input type="text" class="form-control" id="ex4-data" placeholder="Escribe algo">
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex mb-3">
+                            <button class="btn btn-success" onclick="ex4SaveLocal()">localStorage</button>
+                            <button class="btn btn-success" onclick="ex4SaveSession()">sessionStorage</button>
+                        </div>
+
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Valor Actual</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>localStorage</td>
+                                        <td id="ex4-local">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>sessionStorage</td>
+                                        <td id="ex4-session">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <small class="text-muted"><strong>Al recargar:</strong> localStorage persiste, sessionStorage también.<br><strong>Al cerrar pestaña:</strong> localStorage persiste, sessionStorage se elimina.<br><strong>Nueva pestaña:</strong> localStorage persiste, sessionStorage no (nueva sesión).</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EJERCICIO 5: Lista de tareas -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Ejercicio 5: Lista de Tareas Sincronizada</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="ex5-task" class="form-label">Nueva tarea:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="ex5-task" placeholder="Escribe una tarea">
+                                <button class="btn btn-success" onclick="ex5AddTask()">Añadir</button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <ul class="list-group" id="ex5-tasks">
+                                <li class="list-group-item text-center text-muted">No hay tareas</li>
+                            </ul>
+                        </div>
+
+                        <button class="btn btn-danger w-100" onclick="ex5ClearAll()">Eliminar Todas las Tareas</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================
+        // EJERCICIO 1: Preferencias de usuario
+        // =====================================
+        // Este ejercicio demuestra el almacenamiento persistente con localStorage.
+        // Los datos se guardan indefinidamente hasta que el usuario los elimine.
+
+        /**
+         * Guarda el nombre y color de fondo en localStorage
+         * - Obtiene los valores del formulario (trim para eliminar espacios)
+         * - Valida que el nombre no esté vacío
+         * - Almacena ambos valores en localStorage
+         * - Aplica inmediatamente el color de fondo al body
+         * - Actualiza el mensaje de estado
+         */
+        function ex1Save() {
+            const name = document.getElementById('ex1-name').value.trim();
+            const color = document.getElementById('ex1-color').value;
+
+            if (!name) {
+                alert('Por favor, ingresa tu nombre');
+                return;
+            }
+
+            // Guardando datos en localStorage (clave-valor)
+            localStorage.setItem('ex1-name', name);
+            localStorage.setItem('ex1-color', color);
+
+            // Aplicar el color inmediatamente a la página
+            document.getElementById('mainBody').style.backgroundColor = color;
+            updateEx1Output();
+        }
+
+        /**
+         * Elimina los datos de preferencias guardados en localStorage
+         * - Solicita confirmación del usuario
+         * - Elimina nombre y color de localStorage
+         * - Limpia los inputs del formulario
+         * - Restaura el color de fondo por defecto
+         * - Actualiza el mensaje de estado
+         */
+        function ex1Reset() {
+            if (confirm('Confirma que deseas restablecer las preferencias')) {
+                // Eliminando datos específicos de localStorage
+                localStorage.removeItem('ex1-name');
+                localStorage.removeItem('ex1-color');
+                
+                // Limpiar interfaz
+                document.getElementById('ex1-name').value = '';
+                document.getElementById('ex1-color').value = '#ffffff';
+                document.getElementById('mainBody').style.backgroundColor = '#ffffff';
+                updateEx1Output();
+            }
+        }
+
+        /**
+         * Carga las preferencias guardadas en localStorage cuando se abre la página
+         * - Se llama automáticamente al inicializar la aplicación
+         * - Recupera nombre y color del localStorage
+         * - Restaura los valores en los inputs
+         * - Aplica el color de fondo si existe
+         * - Actualiza el mensaje de estado
+         */
+        function ex1Load() {
+            // Recuperando datos de localStorage
+            const name = localStorage.getItem('ex1-name');
+            const color = localStorage.getItem('ex1-color');
+
+            // Si hay un nombre guardado, restaurarlo en el input
+            if (name) {
+                document.getElementById('ex1-name').value = name;
+            }
+
+            // Si hay un color guardado, aplicarlo a la página y al select
+            if (color) {
+                document.getElementById('ex1-color').value = color;
+                document.getElementById('mainBody').style.backgroundColor = color;
+            }
+
+            updateEx1Output();
+        }
+
+        /**
+         * Actualiza el mensaje de estado del Ejercicio 1
+         * - Verifica si hay datos guardados
+         * - Muestra un mensaje de bienvenida si los datos existen
+         * - Muestra un mensaje de instrucción si no hay datos
+         */
+        function updateEx1Output() {
+            const name = localStorage.getItem('ex1-name');
+            const output = document.getElementById('ex1-bg');
+
+            if (name) {
+                output.textContent = 'Bienvenido, ' + name + '. Preferencias cargadas correctamente.';
+            } else {
+                output.textContent = 'No hay preferencias guardadas. Ingresa tus datos arriba.';
+            }
+        }
+
+        // =====================================
+        // EJERCICIO 2: Contador de visitas
+        // =====================================
+        // Este ejercicio demuestra la lectura, incremento y actualización de datos en localStorage.
+        // El contador persiste incluso si se cierra el navegador.
+
+        /**
+         * Carga e incrementa el contador de visitas
+         * - Se llama automáticamente cada vez que se carga la página
+         * - Obtiene el valor actual de localStorage (como string)
+         * - Convierte el string a número con parseInt()
+         * - Incrementa el contador
+         * - Guarda el nuevo valor en localStorage
+         * - Actualiza la interfaz mostrando el contador
+         */
+        function ex2Load() {
+            // Obtener contador actual de localStorage (por defecto es string)
+            let visits = localStorage.getItem('ex2-visits');
+
+            // Convertir tipo de dato: si no existe, inicializar a 0, si existe convertir a número
+            if (!visits) {
+                visits = 0;
+            } else {
+                visits = parseInt(visits); // Conversión de String -> Number
+            }
+
+            // Incrementar contador
+            visits++;
+            
+            // Guardar el nuevo valor en localStorage (se convierte automáticamente a string)
+            localStorage.setItem('ex2-visits', visits);
+            
+            // Actualizar la interfaz
+            document.getElementById('ex2-visits').textContent = visits;
+        }
+
+        /**
+         * Reinicia el contador de visitas a 0
+         * - Solicita confirmación del usuario
+         * - Elimina el valor de localStorage
+         * - Vuelve a ejecutar ex2Load() para establecer el contador en 1
+         */
+        function ex2Reset() {
+            if (confirm('Confirma que deseas reiniciar el contador')) {
+                // Eliminar el contador actual
+                localStorage.removeItem('ex2-visits');
+                
+                // Volver a cargar para reiniciar desde 1
+                ex2Load();
+            }
+        }
+
+        // =====================================
+        // EJERCICIO 3: Almacenamiento temporal
+        // =====================================
+        // Este ejercicio demuestra sessionStorage: almacenamiento temporal que desaparece
+        // cuando se cierra la pestaña o el navegador.
+
+        /**
+         * Guarda datos en sessionStorage
+         * - Obtiene nombre y curso del formulario
+         * - Valida que ambos campos estén completos
+         * - Almacena los datos en sessionStorage (no en localStorage)
+         * - Actualiza la visualización de los datos
+         * 
+         * Diferencia importante:
+         * - localStorage: persiste indefinidamente
+         * - sessionStorage: desaparece al cerrar la pestaña
+         */
+        function ex3Save() {
+            const name = document.getElementById('ex3-name').value.trim();
+            const course = document.getElementById('ex3-course').value.trim();
+
+            if (!name || !course) {
+                alert('Por favor, completa ambos campos');
+                return;
+            }
+
+            // Guardar en sessionStorage (no en localStorage)
+            // sessionStorage es independiente por pestaña
+            sessionStorage.setItem('ex3-name', name);
+            sessionStorage.setItem('ex3-course', course);
+            
+            // Mostrar los datos guardados
+            ex3Display();
+        }
+
+        /**
+         * Muestra los datos guardados en sessionStorage
+         * - Recupera nombre y curso del sessionStorage
+         * - Muestra un mensaje con los datos si existen
+         * - Muestra un mensaje por defecto si no hay datos
+         */
+        function ex3Display() {
+            // Obtener datos de sessionStorage
+            const name = sessionStorage.getItem('ex3-name');
+            const course = sessionStorage.getItem('ex3-course');
+            const output = document.getElementById('ex3-output');
+
+            // Si hay datos, mostrarlos formateados
+            if (name && course) {
+                output.innerHTML = '<strong>Datos guardados:</strong><br>Nombre: ' + name + '<br>Curso: ' + course;
+            } else {
+                output.textContent = 'Los datos aparecerán aquí';
+            }
+        }
+
+        /**
+         * Limpia los datos de sessionStorage y el formulario
+         * - Elimina datos de sessionStorage
+         * - Limpia los inputs del formulario
+         * - Actualiza la visualización
+         */
+        function ex3Clear() {
+            // Eliminar datos de sessionStorage
+            sessionStorage.removeItem('ex3-name');
+            sessionStorage.removeItem('ex3-course');
+            
+            // Limpiar los inputs
+            document.getElementById('ex3-name').value = '';
+            document.getElementById('ex3-course').value = '';
+            
+            // Actualizar visualización
+            ex3Display();
+        }
+
+        // =====================================
+        // EJERCICIO 4: Comparativa localStorage vs sessionStorage
+        // =====================================
+        // Este ejercicio compara el comportamiento de ambos sistemas de almacenamiento
+        // mostrando en tiempo real cómo se diferencian.
+
+        /**
+         * Guarda datos en localStorage y actualiza la tabla
+         * - Obtiene el dato del input
+         * - Valida que no esté vacío
+         * - Almacena en localStorage (persistente)
+         * - Actualiza la tabla comparativa
+         */
+        function ex4SaveLocal() {
+            const data = document.getElementById('ex4-data').value.trim();
+            
+            if (!data) {
+                alert('Ingresa un dato');
+                return;
+            }
+            
+            // Guardar en localStorage (datos persistentes)
+            localStorage.setItem('ex4-data', data);
+            
+            // Actualizar tabla comparativa
+            ex4UpdateDisplay();
+        }
+
+        /**
+         * Guarda datos en sessionStorage y actualiza la tabla
+         * - Obtiene el dato del input
+         * - Valida que no esté vacío
+         * - Almacena en sessionStorage (temporal)
+         * - Actualiza la tabla comparativa
+         */
+        function ex4SaveSession() {
+            const data = document.getElementById('ex4-data').value.trim();
+            
+            if (!data) {
+                alert('Ingresa un dato');
+                return;
+            }
+            
+            // Guardar en sessionStorage (datos temporales)
+            sessionStorage.setItem('ex4-data', data);
+            
+            // Actualizar tabla comparativa
+            ex4UpdateDisplay();
+        }
+
+        /**
+         * Actualiza la tabla mostrando los valores actuales en ambos sistemas
+         * - Obtiene el valor de localStorage (o muestra "Vacío" si no existe)
+         * - Obtiene el valor de sessionStorage (o muestra "Vacío" si no existe)
+         * - Actualiza ambas celdas de la tabla
+         * 
+         * Pruebas sugeridas:
+         * 1. Guarda en ambos, recarga -> ambos persisten
+         * 2. Cierra la pestaña y abre una nueva -> localStorage persiste, sessionStorage no
+         * 3. Abre en una nueva pestaña -> localStorage aparece, sessionStorage no
+         */
+        function ex4UpdateDisplay() {
+            // Obtener valores actuales de ambos sistemas (con valores por defecto)
+            const localData = localStorage.getItem('ex4-data') || 'Vacío';
+            const sessionData = sessionStorage.getItem('ex4-data') || 'Vacío';
+            
+            // Actualizar tabla comparativa
+            document.getElementById('ex4-local').textContent = localData;
+            document.getElementById('ex4-session').textContent = sessionData;
+        }
+
+        // =====================================
+        // EJERCICIO 5: Lista de tareas
+        // =====================================
+        // Este ejercicio trabaja con estructuras de datos complejas (arrays de objetos)
+        // usando JSON.stringify() para guardar y JSON.parse() para recuperar.
+        // También incluye sincronización automática entre pestañas.
+
+        /**
+         * Obtiene las tareas guardadas desde localStorage
+         * - Recupera el string JSON de localStorage
+         * - Convierte el JSON a un array de objetos con JSON.parse()
+         * - Si no existe, devuelve un array vacío
+         * 
+         * @returns {Array} Array de tareas: [{id, text, date}, ...]
+         */
+        function ex5GetTasks() {
+            // Obtener string JSON de localStorage
+            const tasks = localStorage.getItem('ex5-tasks');
+            
+            // Convertir JSON a objeto JavaScript (o array vacío si no existe)
+            return tasks ? JSON.parse(tasks) : [];
+        }
+
+        /**
+         * Guarda las tareas en localStorage como JSON
+         * - Convierte el array de objetos a string JSON con JSON.stringify()
+         * - Guarda el JSON en localStorage
+         * - Actualiza la visualización de la lista
+         * 
+         * @param {Array} tasks - Array de tareas a guardar
+         */
+        function ex5SaveTasks(tasks) {
+            // Convertir array de objetos a string JSON
+            localStorage.setItem('ex5-tasks', JSON.stringify(tasks));
+            
+            // Actualizar la lista visual
+            ex5Display();
+        }
+
+        /**
+         * Añade una nueva tarea a la lista
+         * - Obtiene el texto del input
+         * - Valida que no esté vacío
+         * - Crea un objeto tarea con id único (usando timestamp), texto y fecha
+         * - Añade la tarea al array
+         * - Guarda el array actualizado en localStorage
+         * - Limpia el input y le da el foco
+         * 
+         * El ID único es importante para poder eliminar tareas específicamente
+         */
+        function ex5AddTask() {
+            const input = document.getElementById('ex5-task');
+            const taskText = input.value.trim();
+
+            if (!taskText) {
+                alert('Ingresa una tarea');
+                return;
+            }
+
+            // Obtener tareas actuales
+            const tasks = ex5GetTasks();
+            
+            // Crear objeto tarea con estructura clara
+            const task = {
+                id: Date.now(),           // ID único basado en timestamp (milisegundos)
+                text: taskText,           // Texto de la tarea
+                date: new Date().toLocaleString('es-ES') // Fecha/hora formateada
+            };
+
+            // Añadir la nueva tarea al array
+            tasks.push(task);
+            
+            // Guardar el array actualizado en localStorage
+            ex5SaveTasks(tasks);
+            
+            // Limpiar el input y darle foco para añadir otra tarea
+            input.value = '';
+            input.focus();
+        }
+
+        /**
+         * Elimina una tarea específica del array
+         * - Obtiene todas las tareas
+         * - Filtra el array para excluir la tarea con el ID específico
+         * - Guarda el array filtrado en localStorage
+         * 
+         * @param {number} id - ID único de la tarea a eliminar
+         */
+        function ex5DeleteTask(id) {
+            // Obtener todas las tareas
+            const tasks = ex5GetTasks();
+            
+            // Filtrar: mantener todas EXCEPTO la que tiene el ID especificado
+            const filtered = tasks.filter(t => t.id !== id);
+            
+            // Guardar el array filtrado
+            ex5SaveTasks(filtered);
+        }
+
+        /**
+         * Actualiza la visualización de todas las tareas
+         * - Obtiene las tareas del localStorage
+         * - Si no hay tareas, muestra un mensaje de "No hay tareas"
+         * - Si hay tareas, las genera dinámicamente como elementos HTML
+         * - Cada tarea incluye: texto, fecha y botón para eliminar
+         * 
+         * Se llama automáticamente cuando se guardan cambios
+         * También se llama desde el event listener de storage (sincronización)
+         */
+        function ex5Display() {
+            // Obtener tareas actuales
+            const tasks = ex5GetTasks();
+            const list = document.getElementById('ex5-tasks');
+
+            // Si no hay tareas, mostrar mensaje
+            if (tasks.length === 0) {
+                list.innerHTML = '<li class="list-group-item text-center text-muted">No hay tareas</li>';
+                return;
+            }
+
+            // Limpiar lista anterior
+            list.innerHTML = '';
+            
+            // Generar HTML para cada tarea usando clases de Bootstrap
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item task-item';
+                
+                // Crear HTML con información de la tarea y botón para eliminar
+                // Pasamos el ID de la tarea al botón para poder identificarla
+                li.innerHTML = '<div><strong>' + task.text + '</strong><br><small class="text-muted">' + task.date + '</small></div>' +
+                    '<button class="btn btn-sm btn-danger" onclick="ex5DeleteTask(' + task.id + ')">Eliminar</button>';
+                
+                list.appendChild(li);
+            });
+        }
+
+        /**
+         * Elimina todas las tareas
+         * - Solicita confirmación del usuario (acción irreversible)
+         * - Elimina toda la entrada 'ex5-tasks' de localStorage
+         * - Actualiza la visualización
+         */
+        function ex5ClearAll() {
+            if (confirm('Eliminar todas las tareas? Esta acción no se puede deshacer.')) {
+                // Eliminar todos los datos de tareas
+                localStorage.removeItem('ex5-tasks');
+                
+                // Actualizar visualización (mostrará "No hay tareas")
+                ex5Display();
+            }
+        }
+
+        // =====================================
+        // SINCRONIZACIÓN ENTRE PESTAÑAS
+        // =====================================
+        // El evento 'storage' se dispara cuando localStorage cambia EN OTRA PESTAÑA
+        // Esto permite sincronizar datos automáticamente entre múltiples ventanas/pestañas
+        // del mismo origen (mismo dominio, protocolo y puerto)
+
+        /**
+         * Event listener para sincronización automática entre pestañas
+         * 
+         * Funcionamiento:
+         * 1. Usuario abre la página en dos pestañas
+         * 2. Modifica datos en localStorage en la pestaña 1
+         * 3. El evento 'storage' se dispara automáticamente en la pestaña 2
+         * 4. Este listener ejecuta las funciones necesarias para actualizar
+         * 
+         * Nota: El evento NO se dispara en la pestaña que hizo el cambio,
+         * solo en las otras pestañas abiertas del mismo origen.
+         */
+        window.addEventListener('storage', function(e) {
+            // Si cambian las tareas en otra pestaña, actualizar la lista aquí
+            if (e.key === 'ex5-tasks') {
+                ex5Display(); // Mostrar las tareas actualizadas
+            }
+            
+            // Si cambian las preferencias en otra pestaña, actualizar aquí
+            if (e.key === 'ex1-name' || e.key === 'ex1-color') {
+                ex1Load(); // Cargar las preferencias actualizadas
+            }
+            
+            // Si cambian los datos comparativos en otra pestaña, actualizar aquí
+            if (e.key === 'ex4-data') {
+                ex4UpdateDisplay(); // Mostrar datos actualizados
+            }
+        });
+
+        // =====================================
+        // INICIALIZACIÓN DE LA APLICACIÓN
+        // =====================================
+        // Este bloque se ejecuta cuando el DOM está completamente cargado
+        // Restaura todos los datos guardados y prepara la interfaz inicial
+
+        /**
+         * Event listener que se ejecuta cuando el DOM está listo
+         * - Se dispara después de que todas las etiquetas HTML se hayan parseado
+         * - ANTES de que se carguen todas las imágenes y estilos
+         * - Ideal para inicializar datos y event listeners
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar preferencias del Ejercicio 1 (restaurar color de fondo y nombre)
+            ex1Load();
+            
+            // Cargar contador de visitas del Ejercicio 2 (incrementar y mostrar)
+            ex2Load();
+            
+            // Mostrar datos temporales del Ejercicio 3 (si existen)
+            ex3Display();
+            
+            // Mostrar valores comparativos del Ejercicio 4
+            ex4UpdateDisplay();
+            
+            // Mostrar lista de tareas del Ejercicio 5
+            ex5Display();
+        });
+
+        // =====================================
+        // EVENT LISTENERS ADICIONALES
+        // =====================================
+        // Mejoras de experiencia de usuario: permitir agregar tareas con Enter
+
+        /**
+         * Permite añadir una tarea presionando Enter en lugar de hacer clic en el botón
+         * - Escucha el evento 'keypress' en el input de tareas
+         * - Si la tecla presionada es Enter, ejecuta ex5AddTask()
+         * - Mejora la experiencia de usuario
+         */
+        document.getElementById('ex5-task').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                ex5AddTask(); // Ejecutar la función de añadir tarea
+            }
+        });
+    </script>
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

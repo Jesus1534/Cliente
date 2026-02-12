@@ -20,3 +20,5 @@ function ejecutarEjercicio2(): void {
 }
 
 document.getElementById("btn-ejercicio2")?.addEventListener("click", ejecutarEjercicio2);
+
+

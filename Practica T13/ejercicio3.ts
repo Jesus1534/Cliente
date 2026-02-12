@@ -23,3 +23,6 @@ function ejecutarEjercicio3(): void {
 }
 
 document.getElementById("btn-ejercicio3")?.addEventListener("click", ejecutarEjercicio3);
+
+
+

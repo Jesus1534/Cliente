@@ -1,0 +1,51 @@
+<div class="container mt-5">
+  <h2>Gestor de Tareas</h2>
+
+  <!-- Contador de tareas -->
+  <div class="alert alert-info" role="alert">
+    <strong>Total de tareas:</strong> {{ contadorTareas }} | 
+    <strong>Completadas:</strong> {{ tareasCompletadas }}
+  </div>
+
+  <!-- Formulario para añadir tarea -->
+  <div class="mb-3">
+    <div class="input-group">
+      <input type="text" 
+        [(ngModel)]="nuevaTarea"
+        (keyup.enter)="agregarTarea()"
+        placeholder="Escribe una nueva tarea..." 
+        class="form-control" />
+      <button class="btn btn-primary" type="button" (click)="agregarTarea();">
+        Agregar tarea
+      </button>
+    </div>
+  </div>
+
+  <!-- Listado de tareas -->
+  @if (tareas.length === 0) {
+    <div class="alert alert-warning" role="alert">
+      No hay tareas. ¡Crea una nueva!
+    </div>
+  } @else {
+    <ul class="list-group">
+      @for (tarea of tareas; track tarea.id) {
+        <li class="list-group-item d-flex align-items-center justify-content-between" 
+            [ngClass]="{'list-group-item-success': tarea.completada}">
+          <div class="d-flex align-items-center flex-grow-1">
+            <input type="checkbox" 
+              class="form-check-input me-2"
+              [checked]="tarea.completada"
+              (change)="marcarCompletada(tarea.id)" />
+            <span [ngClass]="{'text-decoration-line-through': tarea.completada}">
+              {{ tarea.texto }}
+            </span>
+          </div>
+          <button class="btn btn-danger btn-sm" (click)="eliminarTarea(tarea.id);">
+            Eliminar
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>
+

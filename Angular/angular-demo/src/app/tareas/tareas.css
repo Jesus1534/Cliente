@@ -1,0 +1,25 @@
+.list-group-item {
+  transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.list-group-item.list-group-item-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.text-decoration-line-through {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.alert {
+  margin-top: 1rem;
+}

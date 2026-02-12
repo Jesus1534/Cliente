@@ -6,7 +6,6 @@ interface Producto {
     nombre: string;
     precio: number;
 }
-
 function ejecutarEjercicio4(): void {
     console.log("Ejercicio 4: Interfaces");
     
@@ -16,7 +15,6 @@ function ejecutarEjercicio4(): void {
         nombre: "Portatil HP",
         precio: 899.99
     };
-    
     console.log("Producto:", producto1);
     console.log("ID:", producto1.id);
     console.log("Nombre:", producto1.nombre);
@@ -28,5 +26,6 @@ function ejecutarEjercicio4(): void {
     //     nombre: "Teclado"
     // };
 }
-
 document.getElementById("btn-ejercicio4")?.addEventListener("click", ejecutarEjercicio4);
+
+

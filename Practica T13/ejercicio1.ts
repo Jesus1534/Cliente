@@ -19,3 +19,4 @@ function ejecutarEjercicio1(): void {
 }
 
 document.getElementById("btn-ejercicio1")?.addEventListener("click", ejecutarEjercicio1);
+

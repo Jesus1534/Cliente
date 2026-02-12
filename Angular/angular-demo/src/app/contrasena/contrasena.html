@@ -1,0 +1,91 @@
+<div class="container mt-5">
+  <h2>Generador de Contraseñas</h2>
+
+  <!-- Formulario -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <!-- Longitud -->
+      <div class="mb-3">
+        <label for="longitud" class="form-label">
+          Longitud: <strong>{{ longitud }}</strong>
+        </label>
+        <input type="range" 
+          id="longitud"
+          class="form-range" 
+          min="4" 
+          max="64" 
+          [(ngModel)]="longitud" />
+      </div>
+
+      <!-- Checkboxes -->
+      <div class="mb-3">
+        <div class="form-check">
+          <input type="checkbox" 
+            id="mayusculas" 
+            class="form-check-input" 
+            [(ngModel)]="incluirMayusculas" />
+          <label class="form-check-label" for="mayusculas">
+            Incluir mayúsculas (A-Z)
+          </label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" 
+            id="minusculas" 
+            class="form-check-input" 
+            [(ngModel)]="incluirMinusculas" />
+          <label class="form-check-label" for="minusculas">
+            Incluir minúsculas (a-z)
+          </label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" 
+            id="numeros" 
+            class="form-check-input" 
+            [(ngModel)]="incluirNumeros" />
+          <label class="form-check-label" for="numeros">
+            Incluir números (0-9)
+          </label>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" 
+            id="simbolos" 
+            class="form-check-input" 
+            [(ngModel)]="incluirSimbolos" />
+          <label class="form-check-label" for="simbolos">
+            Incluir símbolos (!@#$%^&*)
+          </label>
+        </div>
+      </div>
+
+      <!-- Botón generar -->
+      <button class="btn btn-primary btn-lg w-100" (click)="generarContrasena();">
+        Generar Contraseña
+      </button>
+    </div>
+  </div>
+
+  <!-- Resultado -->
+  @if (contrasenaGenerada) {
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Contraseña Generada:</h5>
+        <div class="input-group mb-3">
+          <input type="text" 
+            class="form-control form-control-lg font-monospace" 
+            [value]="contrasenaGenerada" 
+            readonly />
+          <button class="btn btn-outline-secondary" 
+            type="button"
+            (click)="copiarAlPortapapeles()">
+            {{ copiada ? 'Copiada' : 'Copiar' }}
+          </button>
+        </div>
+        @if (copiada) {
+          <div class="alert alert-success mb-0" role="alert">
+            ¡Contraseña copiada al portapapeles!
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

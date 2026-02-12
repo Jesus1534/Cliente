@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscaminas Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-gradient-1: #667eea;
+            --bg-gradient-2: #764ba2;
+            --bg-gradient-3: #f093fb;
+            --container-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --cell-bg: linear-gradient(145deg, #f8f9fa 0%, #e2e8f0 100%);
+            --cell-revealed: linear-gradient(145deg, #ffffff 0%, #f7fafc 100%);
+            --cell-hover: linear-gradient(145deg, #cbd5e0 0%, #a0aec0 100%);
+            --info-bg: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            --board-bg: linear-gradient(135deg, #ccc 0%, #999 100%);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode {
+            --bg-gradient-1: #1a202c;
+            --bg-gradient-2: #2d3748;
+            --bg-gradient-3: #4a5568;
+            --container-bg: rgba(26, 32, 44, 0.95);
+            --text-color: #e2e8f0;
+            --cell-bg: linear-gradient(145deg, #2d3748 0%, #374151 100%);
+            --cell-revealed: linear-gradient(145deg, #1f2937 0%, #111827 100%);
+            --cell-hover: linear-gradient(145deg, #4b5563 0%, #6b7280 100%);
+            --info-bg: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+            --board-bg: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            --shadow-color: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            color: var(--text-color);
+            will-change: background;
+        }
+
+        .bg-particle {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            z-index: 0;
+            display: none;
+        }
+
+        @media (min-width: 1024px) {
+            .bg-particle {
+                display: block;
+                animation: float 20s infinite;
+            }
+        }
+
+        .top-bar {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 25px;
+            background: var(--container-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            z-index: 2;
+        }
+
+        .user-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .user-btn {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .user-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .theme-toggle {
+            padding: 10px 20px;
+            background: var(--info-bg);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .container {
+            background: var(--container-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 25px 70px var(--shadow-color);
+            max-width: 95vw;
+            width: fit-content;
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 30px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px;
+            font-size: 2.8em;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .stats {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.95em;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .info {
+            display: flex;
+            gap: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            background: var(--info-bg);
+            padding: 12px 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .info-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px var(--shadow-color);
+        }
+
+        .info-item.pulse {
+            animation: pulse 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .info-item.danger {
+            animation: dangerPulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.2) translateY(-5px); }
+        }
+
+        @keyframes dangerPulse {
+            0%, 100% { 
+                background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+                transform: scale(1);
+            }
+            50% { 
+                background: linear-gradient(135deg, #f56565 0%, #dc2626 100%);
+                transform: scale(1.1);
+            }
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .difficulty {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: none;
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-difficulty {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-difficulty::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .btn-difficulty:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-difficulty:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-difficulty.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.4);
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 6px 25px rgba(245, 87, 108, 0.4); }
+            50% { box-shadow: 0 6px 35px rgba(245, 87, 108, 0.6); }
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            font-size: 1.5em;
+            padding: 12px 30px;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-reset:hover {
+            transform: scale(1.08) rotate(-2deg);
+            box-shadow: 0 6px 25px rgba(72, 187, 120, 0.5);
+        }
+
+        .btn-tutorial {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-size: 1.2em;
+            padding: 10px 25px;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        }
+
+        .btn-tutorial:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 25px rgba(240, 147, 251, 0.5);
+        }
+
+        .btn-saves {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            font-size: 1.1em;
+            padding: 10px 20px;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-saves:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(245, 158, 11, 0.5);
+        }
+
+        #board {
+            display: grid;
+            gap: 3px;
+            background: var(--board-bg);
+            padding: 10px;
+            border-radius: 15px;
+            margin: 20px auto 0;
+            width: fit-content;
+            box-shadow: inset 0 4px 8px var(--shadow-color);
+        }
+
+        #board.easy {
+            grid-template-columns: repeat(15, minmax(28px, 48px));
+            grid-template-rows: repeat(15, minmax(28px, 48px));
+        }
+
+        #board.medium {
+            grid-template-columns: repeat(25, minmax(20px, 36px));
+            grid-template-rows: repeat(25, minmax(20px, 36px));
+        }
+
+        #board.hard {
+            grid-template-columns: repeat(50, minmax(14px, 24px));
+            grid-template-rows: repeat(50, minmax(14px, 24px));
+            gap: 1px;
+        }
+
+        #board.hard .cell {
+            background: #f8f9fa !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: none !important;
+            border-radius: 3px;
+        }
+
+        #board.hard .cell:hover:not(.revealed):not(.flagged) {
+            background: #e2e8f0 !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        #board.hard .cell.revealed {
+            animation: none !important;
+        }
+
+        #board.hard .cell.flagged {
+            animation: none !important;
+        }
+
+        #board.hard .cell.mine {
+            animation: none !important;
+        }
+
+        .cell {
+            aspect-ratio: 1/1;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            background: var(--cell-bg);
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: none;
+            border-radius: 6px;
+            user-select: none;
+            position: relative;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+
+        body.dark-mode .cell {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #board.easy .cell { font-size: clamp(13px, 2.4vmin, 22px); }
+        #board.medium .cell { font-size: clamp(10px, 1.8vmin, 18px); }
+        #board.hard .cell { font-size: clamp(8px, 1.2vmin, 14px); }
+
+        .cell:hover:not(.revealed):not(.flagged) {
+            background: var(--cell-hover);
+            transform: none;
+            box-shadow: 0 2px 6px var(--shadow-color);
+            z-index: 10;
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .cell.revealed {
+            background: var(--cell-revealed);
+            cursor: default;
+            box-shadow: inset 0 2px 6px var(--shadow-color);
+            animation: none;
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .cell.revealed {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode #board.hard .cell {
+            background: #2d3748 !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        body.dark-mode #board.hard .cell:hover:not(.revealed):not(.flagged) {
+            background: #374151 !important;
+        }
+
+        @keyframes revealCell {
+            0% {
+                transform: scale(0.8) rotateY(90deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1) rotateY(45deg);
+            }
+            100% {
+                transform: scale(1) rotateY(0);
+                opacity: 1;
+            }
+        }
+
+        .cell.flagged {
+            background: linear-gradient(145deg, #ffd89b 0%, #ffc371 100%);
+            animation: none;
+            border-color: #f59e0b;
+        }
+
+        @keyframes flagPlace {
+            0% {
+                transform: scale(0) rotate(-180deg);
+            }
+            70% {
+                transform: scale(1.2) rotate(10deg);
+            }
+            100% {
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        .cell.mine {
+            background: linear-gradient(145deg, #fc8181 0%, #f56565 100%);
+            animation: none;
+            border-color: #dc2626;
+        }
+
+        @keyframes mineExplode {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.5) rotate(15deg);
+                background: #ff0000;
+            }
+            100% {
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        .cell-1 { color: #2563eb; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+        .cell-2 { color: #059669; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+        .cell-3 { color: #dc2626; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+        .cell-4 { color: #7c3aed; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+        .cell-5 { color: #b91c1c; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+        .cell-6 { color: #0891b2; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+        .cell-7 { color: #1f2937; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+        .cell-8 { color: #6b7280; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); font-weight: 900; }
+
+        body.dark-mode .cell-7 { color: #e5e7eb; }
+        body.dark-mode .cell-8 { color: #d1d5db; }
+
+        #message {
+            text-align: center;
+            margin-top: 20px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-over {
+            font-size: 2em;
+            font-weight: bold;
+            padding: 20px 40px;
+            border-radius: 15px;
+            animation: gameOverAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 8px 24px var(--shadow-color);
+        }
+
+        @keyframes gameOverAppear {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.2) rotate(10deg);
+            }
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+        }
+
+        .game-over.win {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            animation: gameOverAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+                       celebration 1s ease-in-out 0.6s infinite;
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: scale(1) rotate(0); }
+            25% { transform: scale(1.05) rotate(-5deg); }
+            75% { transform: scale(1.05) rotate(5deg); }
+        }
+
+        .game-over.lose {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            animation: gameOverAppear 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+                       shake 0.5s ease-in-out 0.6s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: var(--container-bg);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            position: relative;
+            animation: modalSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            margin: auto;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: scale(0.7) translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .tutorial-step {
+            display: none;
+            animation: stepFadeIn 0.4s ease-out;
+        }
+
+        .tutorial-step.active {
+            display: block;
+        }
+
+        @keyframes stepFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .tutorial-step-content {
+            margin: 30px 0;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        .tutorial-icon {
+            font-size: 4em;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        /* Interactive tutorial board */
+        .tutorial-board {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: fit-content;
+            background: var(--board-bg);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .tutorial-cell {
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            background: var(--cell-bg);
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .tutorial-cell:hover:not(.revealed):not(.flagged) {
+            transform: scale(1.1);
+            border-color: #667eea;
+        }
+
+        .tutorial-cell.revealed {
+            background: var(--cell-revealed);
+            box-shadow: inset 0 2px 4px var(--shadow-color);
+        }
+
+        .tutorial-cell.flagged {
+            background: linear-gradient(145deg, #ffd89b 0%, #ffc371 100%);
+        }
+
+        .tutorial-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .tutorial-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .tutorial-btn-prev {
+            background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+            color: #333;
+        }
+
+        .tutorial-btn-next {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tutorial-btn-close {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .tutorial-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .tutorial-progress {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .tutorial-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tutorial-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #cbd5e0;
+            transition: all 0.3s;
+        }
+
+        .tutorial-dot.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scale(1.3);
+        }
+
+        /* Saves modal */
+        .save-item {
+            background: var(--info-bg);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .save-info {
+            flex: 1;
+        }
+
+        .save-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .save-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .load-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* User management */
+        .user-management {
+            margin: 20px 0;
+        }
+
+        .add-user-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .add-user-form input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: var(--cell-bg);
+            color: var(--text-color);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall 3s linear forwards;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            margin-top: 30px;
+        }
+
+        .leaderboard-item {
+            background: var(--info-bg);
+            padding: 12px 20px;
+            margin: 8px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+        }
+
+        .leaderboard-rank {
+            font-size: 1.5em;
+            font-weight: bold;
+            min-width: 40px;
+        }
+
+        .rank-1 { color: #fbbf24; }
+        .rank-2 { color: #d1d5db; }
+        .rank-3 { color: #f97316; }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .info {
+                font-size: 1em;
+            }
+
+            .game-over {
+                font-size: 1.5em;
+                padding: 15px 30px;
+            }
+
+            .modal {
+                padding: 25px;
+            }
+
+            .tutorial-board {
+                grid-template-columns: repeat(5, 50px);
+                grid-template-rows: repeat(5, 50px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="user-selector" id="userSelector"></div>
+        <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+    </div>
+
+    <div class="container">
+        <h1>💣 Buscaminas Pro</h1>
+        
+        <div class="stats" id="stats">
+            <span>Usuario: <span id="currentUserDisplay">Jugador 1</span> | Mejor tiempo: <span id="bestTime">--</span>s</span>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="changeGameMode('normal')">⏱️ Normal</button>
+            <button class="mode-btn" onclick="changeGameMode('timeAttack')">⚡ Contrarreloj</button>
+        </div>
+
+        <div class="controls">
+            <div class="info">
+                <div class="info-item">
+                    <span>⏱️</span>
+                    <span id="timer">0</span>
+                </div>
+                <div class="info-item">
+                    <span>🚩</span>
+                    <span id="flags">0</span>
+                </div>
+                <div class="info-item" id="timeAttackTimer" style="display: none;">
+                    <span>⏳</span>
+                    <span id="timeAttackCountdown">10</span>
+                </div>
+            </div>
+            
+            <div class="difficulty">
+                <button class="btn-difficulty active" onclick="changeDifficulty('easy')">Fácil</button>
+                <button class="btn-difficulty" onclick="changeDifficulty('medium')">Medio</button>
+                <button class="btn-difficulty" onclick="changeDifficulty('hard')">Difícil</button>
+            </div>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-tutorial" onclick="startTutorial()">📚 Tutorial</button>
+                <button class="btn-saves" onclick="showSaves()">💾 Partidas</button>
+                <button class="btn-reset" onclick="resetGame()">🔄 Nuevo</button>
+            </div>
+        </div>
+
+        <div id="board"></div>
+        <div id="message"></div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="container leaderboard">
+        <h2 style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px;">🏆 Tabla de Líderes</h2>
+        <div id="leaderboardContent"></div>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div class="modal-overlay" id="tutorialOverlay">
+        <div class="modal">
+            <h2>🎓 Tutorial Interactivo</h2>
+            
+            <div class="tutorial-step active" data-step="0">
+                <div class="tutorial-icon">👋</div>
+                <div class="tutorial-step-content">
+                    <h3 style="text-align: center; margin-bottom: 15px;">¡Bienvenido al Buscaminas!</h3>
+                    <p>Este tutorial te enseñará paso a paso cómo jugar. El objetivo es simple: <strong>revelar todas las celdas que no contienen minas</strong>.</p>
+                    <p style="margin-top: 15px;">¡Comencemos! 🚀</p>
+                </div>
+            </div>
+
+            <div class="tutorial-step" data-step="1">
+                <div class="tutorial-icon">👆</div>
+                <div class="tutorial-step-content">
+                    <h3 style="text-align: center; margin-bottom: 15px;">Práctica: Haz Clic Izquierdo</h3>
+                    <p>Haz <strong>clic izquierdo</strong> en las celdas del tablero de abajo para revelarlas. ¡Inténtalo!</p>
+                    <div class="tutorial-board" id="tutorialBoard1"></div>
+                    <p style="text-align: center; color: #667eea; font-weight: bold;" id="tutorial1Feedback"></p>
+                </div>
+            </div>
+
+            <div class="tutorial-step" data-step="2">
+                <div class="tutorial-icon">🔢</div>
+                <div class="tutorial-step-content">
+                    <h3 style="text-align: center; margin-bottom: 15px;">Los Números Te Guían</h3>
+                    <p>El número indica cuántas minas hay en las <strong>8 celdas adyacentes</strong>.</p>
+                    <div class="tutorial-board" id="tutorialBoard2"></div>
+                    <p style="margin-top: 15px;">El "2" indica que hay 2 minas alrededor. Usa esta información para deducir dónde están.</p>
+                </div>
+            </div>
+
+            <div class="tutorial-step" data-step="3">
+                <div class="tutorial-icon">🚩</div>
+                <div class="tutorial-step-content">
+                    <h3 style="text-align: center; margin-bottom: 15px;">Práctica: Clic Derecho - Banderas</h3>
+                    <p>Haz <strong>clic derecho</strong> en las celdas para marcar donde crees que hay minas.</p>
+                    <div class="tutorial-board" id="tutorialBoard3"></div>
+                    <p style="text-align: center; color: #667eea; font-weight: bold;" id="tutorial3Feedback"></p>
+                </div>
+            </div>
+
+            <div class="tutorial-step" data-step="4">
+                <div class="tutorial-icon">⚡</div>
+                <div class="tutorial-step-content">
+                    <h3 style="text-align: center; margin-bottom: 15px;">Modo Contrarreloj</h3>
+                    <p>En el modo <strong>Contrarreloj</strong>, tienes un tiempo límite para marcar una bandera después de revelar una celda.</p>
+                    <p style="margin-top: 15px;">Si el tiempo se acaba sin colocar una bandera, ¡pierdes! Este modo añade emoción y desafío extra.</p>
+                    <p style="margin-top: 15px;"><strong>💡 Consejo:</strong> Piensa rápido pero con estrategia.</p>
+                </div>
+            </div>
+
+            <div class="tutorial-step" data-step="5">
+                <div class="tutorial-icon">💾</div>
+                <div class="tutorial-step-content">
+                    <h3 style="text-align: center; margin-bottom: 15px;">Guardar y Múltiples Jugadores</h3>
+                    <p>Puedes <strong>guardar tu partida</strong> en cualquier momento usando el botón "💾 Partidas".</p>
+                    <p style="margin-top: 15px;">También puedes crear <strong>múltiples usuarios</strong> para competir con amigos en el mismo dispositivo. ¡Compara tus puntuaciones!</p>
+                    <p style="margin-top: 15px;"><strong>🏆 Tabla de líderes:</strong> Mira quién tiene los mejores tiempos abajo del juego.</p>
+                </div>
+            </div>
+
+            <div class="tutorial-step" data-step="6">
+                <div class="tutorial-icon">🎮</div>
+                <div class="tutorial-step-content">
+                    <h3 style="text-align: center; margin-bottom: 15px;">¡Hora de Jugar!</h3>
+                    <p>Ahora que conoces todo, ¡es hora de poner en práctica tus habilidades!</p>
+                    <div style="background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%); padding: 20px; border-radius: 12px; margin: 20px 0; color: white;">
+                        <p style="margin: 0;"><strong>Consejos finales:</strong></p>
+                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                            <li>Empieza por las esquinas</li>
+                            <li>Busca patrones en los números</li>
+                            <li>Usa el modo oscuro si lo prefieres (botón 🌓)</li>
+                            <li>¡Practica para mejorar tu tiempo!</li>
+                        </ul>
+                    </div>
+                    <p style="text-align: center; margin-top: 20px; font-size: 1.2em;">¡Buena suerte! 🍀</p>
+                </div>
+            </div>
+
+            <div class="tutorial-progress">
+                <div class="tutorial-dots" id="tutorialDots"></div>
+                <p style="margin-top: 10px;">Paso <span id="currentStep">1</span> de <span id="totalSteps">7</span></p>
+            </div>
+
+            <div class="tutorial-buttons">
+                <button class="tutorial-btn tutorial-btn-prev" onclick="prevTutorialStep()" id="prevBtn">← Anterior</button>
+                <button class="tutorial-btn tutorial-btn-next" onclick="nextTutorialStep()" id="nextBtn">Siguiente →</button>
+                <button class="tutorial-btn tutorial-btn-close" onclick="closeTutorial()" id="closeBtn" style="display: none;">¡Empezar a Jugar! 🎮</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saves Modal -->
+    <div class="modal-overlay" id="savesOverlay">
+        <div class="modal">
+            <h2>💾 Gestión de Partidas y Usuarios</h2>
+            
+            <div class="user-management">
+                <h3>👥 Usuarios</h3>
+                <div id="usersList"></div>
+                <div class="add-user-form">
+                    <input type="text" id="newUserName" placeholder="Nombre del nuevo usuario" maxlength="20">
+                    <button class="save-btn load-btn" onclick="addNewUser()">➕ Agregar</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3>💾 Partidas Guardadas</h3>
+                <div id="savesList"></div>
+                <button class="save-btn load-btn" onclick="saveCurrentGame()" style="margin-top: 15px; width: 100%;">💾 Guardar Partida Actual</button>
+            </div>
+
+            <div class="tutorial-buttons" style="margin-top: 30px;">
+                <button class="tutorial-btn tutorial-btn-close" onclick="closeSaves()" style="flex: 1;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const difficulties = {
+            easy: { rows: 15, cols: 15, mines: 30 },
+            medium: { rows: 25, cols: 25, mines: 100 },
+            hard: { rows: 50, cols: 50, mines: 400 }
+        };
+
+        let currentDifficulty = 'easy';
+        let currentGameMode = 'normal';
+        let config = difficulties[currentDifficulty];
+        let board = [];
+        let revealed = [];
+        let flagged = [];
+        let gameOver = false;
+        let gameStarted = false;
+        let timer = 0;
+        let timerInterval = null;
+        let tutorialStep = 0;
+        let timeAttackInterval = null;
+        let timeAttackCountdown = 10;
+        let lastActionTime = Date.now();
+        let currentUser = 'Jugador 1';
+        let storageUpdateTimer = null; // Para debouncing de localStorage
+
+        // Storage debouncing - mejora rendimiento
+        function debouncedStorageUpdate(key, value, delay = 500) {
+            clearTimeout(storageUpdateTimer);
+            storageUpdateTimer = setTimeout(() => {
+                localStorage.setItem(key, JSON.stringify(value));
+            }, delay);
+        }
+
+        // Initialize particles
+        function createBackgroundParticles() {
+            // Reducido de 15 a 3 partículas para mejor rendimiento
+            for (let i = 0; i < 3; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'bg-particle';
+                particle.style.width = Math.random() * 100 + 50 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                document.body.appendChild(particle);
+            }
+        }
+
+        createBackgroundParticles();
+
+        // Storage functions
+        function getUsers() {
+            return JSON.parse(localStorage.getItem('minesweeperUsers')) || ['Jugador 1'];
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('minesweeperUsers', JSON.stringify(users));
+        }
+
+        function getBestTimes() {
+            return JSON.parse(localStorage.getItem('minesweeperBestTimes')) || {};
+        }
+
+        function saveBestTimes(times) {
+            localStorage.setItem('minesweeperBestTimes', JSON.stringify(times));
+        }
+
+        function getSavedGames() {
+            return JSON.parse(localStorage.getItem('minesweeperSaves')) || [];
+        }
+
+        function saveSavedGames(saves) {
+            localStorage.setItem('minesweeperSaves', JSON.stringify(saves));
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('minesweeperTheme', isDark ? 'dark' : 'light');
+        }
+
+        // Load theme
+        if (localStorage.getItem('minesweeperTheme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // User management
+        function updateUserSelector() {
+            const users = getUsers();
+            const selector = document.getElementById('userSelector');
+            selector.innerHTML = '';
+            
+            users.forEach(user => {
+                const btn = document.createElement('button');
+                btn.className = 'user-btn' + (user === currentUser ? ' active' : '');
+                btn.textContent = user;
+                btn.onclick = () => switchUser(user);
+                selector.appendChild(btn);
+            });
+        }
+
+        function switchUser(user) {
+            currentUser = user;
+            document.getElementById('currentUserDisplay').textContent = user;
+            updateUserSelector();
+            updateBestTimeDisplay();
+            updateLeaderboard();
+            initGame();
+        }
+
+        function addNewUser() {
+            const input = document.getElementById('newUserName');
+            const name = input.value.trim();
+            
+            if (!name) {
+                alert('Por favor ingresa un nombre');
+                return;
+            }
+            
+            const users = getUsers();
+            if (users.includes(name)) {
+                alert('Este usuario ya existe');
+                return;
+            }
+            
+            users.push(name);
+            saveUsers(users);
+            input.value = '';
+            updateUsersList();
+            updateUserSelector();
+        }
+
+        function deleteUser(user) {
+            if (user === 'Jugador 1') {
+                alert('No puedes eliminar al jugador predeterminado');
+                return;
+            }
+            
+            if (!confirm(`¿Eliminar usuario "${user}"?`)) return;
+            
+            let users = getUsers();
+            users = users.filter(u => u !== user);
+            saveUsers(users);
+            
+            // Delete user's times
+            const times = getBestTimes();
+            Object.keys(times).forEach(key => {
+                if (key.startsWith(user + '_')) {
+                    delete times[key];
+                }
+            });
+            saveBestTimes(times);
+            
+            // Switch to default user if current user was deleted
+            if (currentUser === user) {
+                switchUser('Jugador 1');
+            }
+            
+            updateUsersList();
+            updateUserSelector();
+            updateLeaderboard();
+        }
+
+        function updateUsersList() {
+            const users = getUsers();
+            const list = document.getElementById('usersList');
+            list.innerHTML = '';
+            
+            users.forEach(user => {
+                const item = document.createElement('div');
+                item.className = 'save-item';
+                item.innerHTML = `
+                    <div class="save-info">
+                        <strong>${user}</strong>
+                    </div>
+                    <div class="save-actions">
+                        ${user !== 'Jugador 1' ? `<button class="save-btn delete-btn" onclick="deleteUser('${user}')">🗑️ Eliminar</button>` : ''}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // Game mode
+        function changeGameMode(mode) {
+            currentGameMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const timeAttackTimer = document.getElementById('timeAttackTimer');
+            if (mode === 'timeAttack') {
+                timeAttackTimer.style.display = 'flex';
+            } else {
+                timeAttackTimer.style.display = 'none';
+            }
+            
+            initGame();
+        }
+
+        function startTimeAttackTimer() {
+            if (currentGameMode !== 'timeAttack') return;
+            
+            clearInterval(timeAttackInterval);
+            timeAttackCountdown = 10;
+            document.getElementById('timeAttackCountdown').textContent = timeAttackCountdown;
+            document.getElementById('timeAttackTimer').classList.remove('danger');
+            
+            timeAttackInterval = setInterval(() => {
+                timeAttackCountdown--;
+                document.getElementById('timeAttackCountdown').textContent = timeAttackCountdown;
+                
+                if (timeAttackCountdown <= 3) {
+                    document.getElementById('timeAttackTimer').classList.add('danger');
+                }
+                
+                if (timeAttackCountdown <= 0) {
+                    clearInterval(timeAttackInterval);
+                    endGame(false, 'Se acabó el tiempo para colocar una bandera! ⏰');
+                }
+            }, 1000);
+        }
+
+        function resetTimeAttackTimer() {
+            if (currentGameMode !== 'timeAttack') return;
+            startTimeAttackTimer();
+        }
+
+        // Best times
+        function updateBestTimeDisplay() {
+            const times = getBestTimes();
+            const key = currentUser + '_' + currentDifficulty;
+            const bestTime = times[key];
+            document.getElementById('bestTime').textContent = bestTime ? bestTime : '--';
+        }
+
+        function saveBestTime(time) {
+            const times = getBestTimes();
+            const key = currentUser + '_' + currentDifficulty;
+            
+            if (!times[key] || time < times[key]) {
+                times[key] = time;
+                saveBestTimes(times);
+                updateBestTimeDisplay();
+                updateLeaderboard();
+                return true;
+            }
+            return false;
+        }
+
+        // Leaderboard
+        function updateLeaderboard() {
+            const times = getBestTimes();
+            const leaderboard = [];
+            
+            Object.keys(times).forEach(key => {
+                const [user, difficulty] = key.split('_');
+                leaderboard.push({ user, difficulty, time: times[key] });
+            });
+            
+            leaderboard.sort((a, b) => a.time - b.time);
+            
+            const content = document.getElementById('leaderboardContent');
+            content.innerHTML = '';
+            
+            if (leaderboard.length === 0) {
+                content.innerHTML = '<p style="text-align: center; padding: 20px;">No hay récords todavía. ¡Sé el primero!</p>';
+                return;
+            }
+            
+            leaderboard.slice(0, 10).forEach((entry, index) => {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = `
+                    <span class="leaderboard-rank rank-${index + 1}">${index + 1}.</span>
+                    <div style="flex: 1;">
+                        <strong>${entry.user}</strong>
+                        <div style="font-size: 0.9em; opacity: 0.7;">${entry.difficulty.charAt(0).toUpperCase() + entry.difficulty.slice(1)}</div>
+                    </div>
+                    <div style="font-size: 1.3em; font-weight: bold; color: #667eea;">${entry.time}s</div>
+                `;
+                content.appendChild(item);
+            });
+        }
+
+        // Difficulty
+        function changeDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            config = difficulties[difficulty];
+            
+            document.querySelectorAll('.btn-difficulty').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            updateBestTimeDisplay();
+            initGame();
+        }
+
+        // Game functions
+        function initGame() {
+            board = Array(config.rows).fill().map(() => Array(config.cols).fill(0));
+            revealed = Array(config.rows).fill().map(() => Array(config.cols).fill(false));
+            flagged = Array(config.rows).fill().map(() => Array(config.cols).fill(false));
+            gameOver = false;
+            gameStarted = false;
+            timer = 0;
+            clearInterval(timerInterval);
+            clearInterval(timeAttackInterval);
+            
+            // Clear cell cache
+            Object.keys(cellCache).forEach(key => delete cellCache[key]);
+            
+            document.getElementById('timer').textContent = '0';
+            document.getElementById('flags').textContent = config.mines;
+            document.getElementById('message').innerHTML = '';
+            document.getElementById('timeAttackCountdown').textContent = '10';
+            document.getElementById('timeAttackTimer').classList.remove('danger');
+            
+            updateBestTimeDisplay();
+            createBoard();
+        }
+
+        function placeMines(firstRow, firstCol) {
+            let minesPlaced = 0;
+            // Aumentar límite de intentos para mejor colocación
+            const maxAttempts = config.rows * config.cols * 3;
+            
+            while (minesPlaced < config.mines && maxAttempts > 0) {
+                const row = Math.floor(Math.random() * config.rows);
+                const col = Math.floor(Math.random() * config.cols);
+                
+                const isNearFirst = Math.abs(row - firstRow) <= 1 && Math.abs(col - firstCol) <= 1;
+                
+                if (board[row][col] !== 'M' && !isNearFirst) {
+                    board[row][col] = 'M';
+                    minesPlaced++;
+                    
+                    // Cálculo optimizado de números adyacentes
+                    for (let i = -1; i <= 1; i++) {
+                        for (let j = -1; j <= 1; j++) {
+                            if (i === 0 && j === 0) continue;
+                            const newRow = row + i;
+                            const newCol = col + j;
+                            if (newRow >= 0 && newRow < config.rows && 
+                                newCol >= 0 && newCol < config.cols && 
+                                board[newRow][newCol] !== 'M') {
+                                board[newRow][newCol]++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function createBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            boardElement.className = currentDifficulty;
+            
+            const fragment = document.createDocumentFragment();
+            const cellsHTML = [];
+            
+            for (let i = 0; i < config.rows; i++) {
+                for (let j = 0; j < config.cols; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    fragment.appendChild(cell);
+                }
+            }
+            
+            boardElement.appendChild(fragment);
+            
+            // Event delegation en el contenedor
+            boardElement.removeEventListener('click', handleBoardClick);
+            boardElement.removeEventListener('contextmenu', handleBoardRightClick);
+            boardElement.addEventListener('click', handleBoardClick);
+            boardElement.addEventListener('contextmenu', handleBoardRightClick);
+        }
+        
+        function handleBoardClick(e) {
+            if (e.target.classList.contains('cell')) {
+                const row = parseInt(e.target.dataset.row);
+                const col = parseInt(e.target.dataset.col);
+                handleClick(row, col);
+            }
+        }
+        
+        function handleBoardRightClick(e) {
+            if (e.target.classList.contains('cell')) {
+                e.preventDefault();
+                const row = parseInt(e.target.dataset.row);
+                const col = parseInt(e.target.dataset.col);
+                handleRightClick(row, col);
+            }
+        }
+
+        function handleClick(row, col) {
+            if (gameOver || revealed[row][col] || flagged[row][col]) return;
+            
+            if (!gameStarted) {
+                gameStarted = true;
+                placeMines(row, col);
+                startTimer();
+                if (currentGameMode === 'timeAttack') {
+                    startTimeAttackTimer();
+                }
+            }
+            
+            if (board[row][col] === 'M') {
+                revealMines();
+                endGame(false);
+                return;
+            }
+            
+            revealCell(row, col);
+            
+            if (currentGameMode === 'timeAttack') {
+                resetTimeAttackTimer();
+            }
+            
+            checkWin();
+        }
+
+        function handleRightClick(row, col) {
+            if (gameOver || revealed[row][col]) return;
+            
+            flagged[row][col] = !flagged[row][col];
+            updateCell(row, col);
+            
+            const flagsLeft = config.mines - countFlags();
+            const flagsElement = document.getElementById('flags');
+            flagsElement.textContent = flagsLeft;
+            
+            const flagsItem = flagsElement.parentElement;
+            flagsItem.classList.add('pulse');
+            setTimeout(() => flagsItem.classList.remove('pulse'), 500);
+            
+            if (currentGameMode === 'timeAttack' && gameStarted) {
+                resetTimeAttackTimer();
+            }
+        }
+
+        function revealCell(row, col) {
+            const queue = [[row, col]];
+            const cellsToUpdate = [];
+            
+            while (queue.length > 0) {
+                const [r, c] = queue.shift();
+                
+                if (r < 0 || r >= config.rows || c < 0 || c >= config.cols) continue;
+                if (revealed[r][c] || flagged[r][c]) continue;
+                
+                revealed[r][c] = true;
+                cellsToUpdate.push([r, c]);
+                
+                if (board[r][c] === 0) {
+                    for (let i = -1; i <= 1; i++) {
+                        for (let j = -1; j <= 1; j++) {
+                            if (i === 0 && j === 0) continue;
+                            queue.push([r + i, c + j]);
+                        }
+                    }
+                }
+            }
+            
+            // Batch update cells
+            cellsToUpdate.forEach(([r, c]) => updateCell(r, c));
+        }
+
+        const cellCache = {};
+        
+        function updateCell(row, col) {
+            const key = row + ',' + col;
+            let cell = cellCache[key];
+            
+            if (!cell) {
+                cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (!cell) return;
+                cellCache[key] = cell;
+            }
+            
+            if (revealed[row][col]) {
+                cell.classList.add('revealed');
+                if (board[row][col] === 'M') {
+                    cell.textContent = '💣';
+                    cell.classList.add('mine');
+                } else if (board[row][col] > 0) {
+                    cell.textContent = board[row][col];
+                    cell.classList.add(`cell-${board[row][col]}`);
+                }
+            } else if (flagged[row][col]) {
+                cell.classList.add('flagged');
+                cell.textContent = '🚩';
+            } else {
+                cell.classList.remove('flagged');
+                cell.textContent = '';
+            }
+        }
+
+        function revealMines() {
+            const mines = [];
+            for (let i = 0; i < config.rows; i++) {
+                for (let j = 0; j < config.cols; j++) {
+                    if (board[i][j] === 'M') {
+                        revealed[i][j] = true;
+                        mines.push([i, j]);
+                    }
+                }
+            }
+            
+            // Actualización inmediata sin animaciones (mejor rendimiento)
+            mines.forEach(([i, j]) => updateCell(i, j));
+        }
+
+        function countFlags() {
+            let count = 0;
+            for (let i = 0; i < config.rows; i++) {
+                for (let j = 0; j < config.cols; j++) {
+                    if (flagged[i][j]) count++;
+                }
+            }
+            return count;
+        }
+
+        function checkWin() {
+            let revealedCount = 0;
+            for (let i = 0; i < config.rows; i++) {
+                for (let j = 0; j < config.cols; j++) {
+                    if (revealed[i][j]) revealedCount++;
+                }
+            }
+            
+            if (revealedCount === config.rows * config.cols - config.mines) {
+                endGame(true);
+            }
+        }
+
+        function createConfetti() {
+            // Confetti reducido para mejor rendimiento
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            const confettiCount = 20; // Reducido de 30-100
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = (i * 0.01) + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 2000); // Reducido de 3000ms
+            }
+        }
+
+        function endGame(won, customMessage) {
+            gameOver = true;
+            clearInterval(timerInterval);
+            clearInterval(timeAttackInterval);
+            
+            const message = document.getElementById('message');
+            if (won) {
+                const isNewRecord = saveBestTime(timer);
+                const recordText = isNewRecord ? '<br><small>🏆 ¡Nuevo récord!</small>' : '';
+                message.innerHTML = `<div class="game-over win">🎉 ¡Ganaste en ${timer}s! 🎉${recordText}</div>`;
+                createConfetti();
+            } else {
+                const msg = customMessage || '💥 ¡Perdiste! 💥';
+                message.innerHTML = `<div class="game-over lose">${msg}</div>`;
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timer++;
+                document.getElementById('timer').textContent = timer;
+            }, 1000);
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        // Save/Load
+        function saveCurrentGame() {
+            if (!gameStarted) {
+                alert('No hay partida en curso para guardar');
+                return;
+            }
+            
+            const saves = getSavedGames();
+            const save = {
+                id: Date.now(),
+                user: currentUser,
+                difficulty: currentDifficulty,
+                mode: currentGameMode,
+                timer: timer,
+                board: board,
+                revealed: revealed,
+                flagged: flagged,
+                date: new Date().toLocaleString()
+            };
+            
+            saves.push(save);
+            saveSavedGames(saves);
+            updateSavesList();
+            alert('¡Partida guardada!');
+        }
+
+        function loadGame(id) {
+            const saves = getSavedGames();
+            const save = saves.find(s => s.id === id);
+            
+            if (!save) return;
+            
+            currentUser = save.user;
+            currentDifficulty = save.difficulty;
+            currentGameMode = save.mode;
+            config = difficulties[currentDifficulty];
+            timer = save.timer;
+            board = save.board;
+            revealed = save.revealed;
+            flagged = save.flagged;
+            gameStarted = true;
+            gameOver = false;
+            
+            document.getElementById('timer').textContent = timer;
+            document.getElementById('currentUserDisplay').textContent = currentUser;
+            
+            // Update UI
+            document.querySelectorAll('.btn-difficulty').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="changeDifficulty('${currentDifficulty}')"]`).classList.add('active');
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="changeGameMode('${currentGameMode}')"]`).classList.add('active');
+            
+            createBoard();
+            
+            // Update all cells
+            for (let i = 0; i < config.rows; i++) {
+                for (let j = 0; j < config.cols; j++) {
+                    updateCell(i, j);
+                }
+            }
+            
+            document.getElementById('flags').textContent = config.mines - countFlags();
+            
+            startTimer();
+            if (currentGameMode === 'timeAttack') {
+                document.getElementById('timeAttackTimer').style.display = 'flex';
+                startTimeAttackTimer();
+            }
+            
+            updateUserSelector();
+            updateBestTimeDisplay();
+            closeSaves();
+            
+            alert('¡Partida cargada!');
+        }
+
+        function deleteGame(id) {
+            if (!confirm('¿Eliminar esta partida guardada?')) return;
+            
+            let saves = getSavedGames();
+            saves = saves.filter(s => s.id !== id);
+            saveSavedGames(saves);
+            updateSavesList();
+        }
+
+        function updateSavesList() {
+            const saves = getSavedGames();
+            const list = document.getElementById('savesList');
+            
+            if (saves.length === 0) {
+                list.innerHTML = '<p style="text-align: center; padding: 20px; opacity: 0.7;">No hay partidas guardadas</p>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            saves.reverse().forEach(save => {
+                const item = document.createElement('div');
+                item.className = 'save-item';
+                item.innerHTML = `
+                    <div class="save-info">
+                        <strong>${save.user}</strong> - ${save.difficulty.charAt(0).toUpperCase() + save.difficulty.slice(1)} ${save.mode === 'timeAttack' ? '⚡' : '⏱️'}
+                        <div style="font-size: 0.9em; opacity: 0.7;">${save.date} - ${save.timer}s</div>
+                    </div>
+                    <div class="save-actions">
+                        <button class="save-btn load-btn" onclick="loadGame(${save.id})">📂 Cargar</button>
+                        <button class="save-btn delete-btn" onclick="deleteGame(${save.id})">🗑️</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // Tutorial
+        function startTutorial() {
+            tutorialStep = 0;
+            document.getElementById('tutorialOverlay').classList.add('active');
+            updateTutorialStep();
+            initTutorialBoards();
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorialOverlay').classList.remove('active');
+            tutorialStep = 0;
+        }
+
+        function nextTutorialStep() {
+            const totalSteps = 7;
+            if (tutorialStep < totalSteps - 1) {
+                tutorialStep++;
+                updateTutorialStep();
+            }
+        }
+
+        function prevTutorialStep() {
+            if (tutorialStep > 0) {
+                tutorialStep--;
+                updateTutorialStep();
+            }
+        }
+
+        function updateTutorialStep() {
+            const totalSteps = 7;
+            
+            document.querySelectorAll('.tutorial-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            document.querySelector(`[data-step="${tutorialStep}"]`).classList.add('active');
+            
+            // Update dots
+            const dotsContainer = document.getElementById('tutorialDots');
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < totalSteps; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'tutorial-dot' + (i === tutorialStep ? ' active' : '');
+                dotsContainer.appendChild(dot);
+            }
+            
+            document.getElementById('currentStep').textContent = tutorialStep + 1;
+            document.getElementById('totalSteps').textContent = totalSteps;
+            
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const closeBtn = document.getElementById('closeBtn');
+            
+            prevBtn.style.display = tutorialStep === 0 ? 'none' : 'block';
+            
+            if (tutorialStep === totalSteps - 1) {
+                nextBtn.style.display = 'none';
+                closeBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                closeBtn.style.display = 'none';
+            }
+        }
+
+        function initTutorialBoards() {
+            // Board 1: Left click practice
+            const board1 = document.getElementById('tutorialBoard1');
+            if (board1) {
+                board1.innerHTML = '';
+                for (let i = 0; i < 25; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'tutorial-cell';
+                    cell.dataset.tutorial = '1';
+                    cell.dataset.index = i;
+                    cell.addEventListener('click', handleTutorialClick);
+                    board1.appendChild(cell);
+                }
+            }
+            
+            // Board 2: Numbers demonstration
+            const board2 = document.getElementById('tutorialBoard2');
+            if (board2) {
+                board2.innerHTML = '';
+                const layout = [
+                    '', '', '', '', '',
+                    '', '1', '1', '1', '',
+                    '', '1', '2', '1', '',
+                    '', '1', '1', '1', '',
+                    '', '', '', '', ''
+                ];
+                layout.forEach((val, i) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'tutorial-cell revealed';
+                    if (val) {
+                        cell.textContent = val;
+                        cell.classList.add(`cell-${val}`);
+                    }
+                    board2.appendChild(cell);
+                });
+            }
+            
+            // Board 3: Right click practice
+            const board3 = document.getElementById('tutorialBoard3');
+            if (board3) {
+                board3.innerHTML = '';
+                for (let i = 0; i < 25; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'tutorial-cell';
+                    cell.dataset.tutorial = '3';
+                    cell.dataset.index = i;
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleTutorialRightClick(cell);
+                    });
+                    board3.appendChild(cell);
+                }
+            }
+        }
+
+        function handleTutorialClick(e) {
+            const cell = e.target;
+            if (cell.classList.contains('revealed')) return;
+            
+            cell.classList.add('revealed');
+            const random = Math.floor(Math.random() * 4);
+            if (random > 0) {
+                cell.textContent = random;
+                cell.classList.add(`cell-${random}`);
+            }
+            
+            document.getElementById('tutorial1Feedback').textContent = '¡Excelente! Sigue practicando 👍';
+        }
+
+        function handleTutorialRightClick(cell) {
+            if (cell.classList.contains('revealed')) return;
+            
+            if (cell.classList.contains('flagged')) {
+                cell.classList.remove('flagged');
+                cell.textContent = '';
+            } else {
+                cell.classList.add('flagged');
+                cell.textContent = '🚩';
+            }
+            
+            document.getElementById('tutorial3Feedback').textContent = '¡Perfecto! Así se marcan las minas 🚩';
+        }
+
+        // Saves modal
+        function showSaves() {
+            document.getElementById('savesOverlay').classList.add('active');
+            updateSavesList();
+            updateUsersList();
+        }
+
+        function closeSaves() {
+            document.getElementById('savesOverlay').classList.remove('active');
+        }
+
+        // Close modals on overlay click
+        document.getElementById('tutorialOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeTutorial();
+        });
+
+        document.getElementById('savesOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeSaves();
+        });
+
+        // Initialize
+        updateUserSelector();
+        updateBestTimeDisplay();
+        updateLeaderboard();
+        initGame();
+    </script>
+</body>
+</html>
